@@ -15,31 +15,39 @@ body {
     text-align: center;
 }
 
-/* меню */
+/* заголовок */
+h1 {
+    margin-top: 25px;
+}
+
+/* МЕНЮ */
 .menu {
-    margin-top: 40px;
+    margin-top: 30px;
 }
 
 input {
-    padding: 10px;
-    margin: 10px;
-    border-radius: 10px;
-    border: none;
-    width: 60px;
-    text-align: center;
-    font-size: 18px;
-}
-
-/* кнопки */
-button {
-    padding: 12px 18px;
-    border: none;
+    padding: 14px;
+    margin: 12px;
     border-radius: 12px;
-    margin: 10px;
-    font-size: 16px;
-    cursor: pointer;
+    border: none;
+    width: 80px;
+    text-align: center;
+    font-size: 20px;
 }
 
+/* КНОПКИ — СИЛЬНО УВЕЛИЧЕНЫ */
+button {
+    padding: 18px 24px;
+    border: none;
+    border-radius: 16px;
+    margin: 12px;
+    font-size: 20px;
+    cursor: pointer;
+    width: 85%;
+    max-width: 350px;
+}
+
+/* разные кнопки */
 .start { background:#2196f3; color:white; }
 .next { background:#4caf50; color:white; }
 .show { background:#ff9800; color:white; }
@@ -47,17 +55,18 @@ button {
 /* карточка */
 .card {
     width: 90%;
-    max-width: 400px;
+    max-width: 420px;
     margin: 20px auto;
-    padding: 20px;
-    border-radius: 20px;
+    padding: 25px;
+    border-radius: 22px;
     background: #222;
+    font-size: 22px;
 }
 
 img {
     width: 100%;
     border-radius: 15px;
-    margin-top: 10px;
+    margin-top: 15px;
 }
 
 /* оверлей */
@@ -73,6 +82,11 @@ img {
     align-items: center;
     flex-direction: column;
     z-index: 999;
+    padding: 20px;
+}
+
+.overlay h1 {
+    font-size: 26px;
 }
 </style>
 </head>
@@ -93,7 +107,7 @@ img {
         <input id="spiesCount" type="number" value="1" min="1" max="5">
     </div>
 
-    <button class="start" onclick="startGame()">Начать игру</button>
+    <button class="start" onclick="startGame()">▶ Начать игру</button>
 </div>
 
 <!-- ИГРА -->
@@ -102,13 +116,13 @@ img {
 </div>
 
 <button class="next" id="nextBtn" style="display:none;" onclick="nextPlayer()">
-Следующий игрок ➡️
+➡ Следующий игрок
 </button>
 
 <!-- ОВЕРЛЕЙ -->
 <div class="overlay" id="overlay">
     <h1>📱 Передайте телефон</h1>
-    <button class="show" onclick="showCard()">Я готов ▶</button>
+    <button class="show" onclick="showCard()">Я готов</button>
 </div>
 
 <script>
@@ -134,10 +148,8 @@ function startGame() {
 
     index = 0;
 
-    // случайное место
     locationData = locations[Math.floor(Math.random() * locations.length)];
 
-    // создаём роли
     players = [];
 
     for (let i = 0; i < spies; i++) players.push("spy");
@@ -154,7 +166,8 @@ function startGame() {
 
 function nextPlayer() {
     if (index >= players.length) {
-        document.getElementById("card").innerHTML = "🎉 Игра окончена";
+        document.getElementById("card").innerHTML = "🎉 Роли розданы";
+        document.getElementById("nextBtn").style.display = "none";
         return;
     }
 
