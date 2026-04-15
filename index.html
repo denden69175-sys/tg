@@ -13,7 +13,7 @@ body {
     color:#e0e0e0;
 }
 
-h1 { text-align:center; margin:20px 0; }
+h1 { text-align:center; margin:15px 0; font-size:22px; }
 
 .screen {
     position:absolute;
@@ -25,32 +25,42 @@ h1 { text-align:center; margin:20px 0; }
     justify-content:center;
     align-items:center;
     flex-direction:column;
+    padding:10px;
 }
 
 .screen.active { display:flex; }
 
 .card {
     background:#1a1a1a;
-    border-radius:25px;
-    padding:25px;
-    width:90%;
-    max-width:420px;
+    border-radius:20px;
+    padding:20px;
+    width:100%;
+    max-width:400px;
     text-align:center;
 }
 
 button {
-    padding:16px;
-    width:90%;
-    margin:10px auto;
+    padding:18px;
+    width:100%;
+    margin:10px 0;
     font-size:18px;
     border:none;
-    border-radius:20px;
+    border-radius:15px;
 }
 
 .mode { background:#9c27b0; color:white; }
 .start { background:#2196f3; color:white; }
 .next { background:#4caf50; color:white; }
-.cat { background:#ff9800; color:white; }
+
+.teamBadge {
+    padding:6px 12px;
+    border-radius:10px;
+    margin-bottom:10px;
+    font-size:14px;
+}
+
+.redBadge { background:#ff5252; }
+.blueBadge { background:#42a5f5; }
 
 .overlay {
     position:fixed;
@@ -63,14 +73,13 @@ button {
     flex-direction:column;
 }
 
-.teamBadge {
- padding:6px 12px;
- border-radius:10px;
- margin-bottom:10px;
+img {
+    width:100%;
+    max-height:200px;
+    object-fit:cover;
+    border-radius:12px;
+    margin-top:10px;
 }
-
-.redBadge { background:#ff5252; }
-.blueBadge { background:#42a5f5; }
 </style>
 </head>
 
@@ -87,13 +96,24 @@ button {
 </div>
 </div>
 
-<!-- SETUP -->
+<!-- HOSTAGE SELECT -->
+<div id="hostageSelect" class="screen">
+<div class="card">
+<h2>Количество игроков</h2>
+<button class="start" onclick="startHostage(8)">8 игроков</button>
+<button class="start" onclick="startHostage(10)">10 игроков</button>
+</div>
+</div>
+
+<!-- SPY SETUP -->
 <div id="setup" class="screen">
 <div class="card">
 <h2>Настройки</h2>
-<input id="players" type="number" value="5"><br>
-<input id="spies" type="number" value="1"><br>
-<button class="start" onclick="startGame()">Далее</button>
+<p>Игроки</p>
+<input id="players" type="number" value="5">
+<p>Шпионы</p>
+<input id="spies" type="number" value="1">
+<button class="start" onclick="startSpy()">Далее</button>
 </div>
 </div>
 
@@ -101,14 +121,14 @@ button {
 <div id="categories" class="screen">
 <div class="card">
 <h2>Категория</h2>
-<button class="cat" onclick="chooseCategory('location')">📍 Локации</button>
-<button class="cat" onclick="chooseCategory('people')">👤 Люди</button>
+<button class="start" onclick="chooseCategory('location')">📍 Локации</button>
+<button class="start" onclick="chooseCategory('people')">👤 Люди</button>
 </div>
 </div>
 
 <!-- GAME -->
 <div id="game" class="screen">
-<div class="card" id="card">Нажми далее</div>
+<div class="card" id="card">Нажми "Следующий игрок"</div>
 <button class="next" onclick="nextPlayer()">Следующий игрок</button>
 <button onclick="restart()">🔁 Заново</button>
 </div>
@@ -128,15 +148,11 @@ let index = 0;
 let spiesCount = 1;
 let secret = null;
 
-// hostage роли
-const hostageRoles = ["Босс","Шпион","Подрывник","Стесняжка"];
-
-// данные
+/* данные */
 const data = {
  location:[
   {name:"Пляж", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e"},
-  {name:"Город", img:"https://images.unsplash.com/photo-1494526585095-c41746248156"},
-  {name:"Горы", img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470"}
+  {name:"Город", img:"https://images.unsplash.com/photo-1494526585095-c41746248156"}
  ],
  people:[
   {name:"Месси", img:"https://upload.wikimedia.org/wikipedia/commons/8/89/Lionel_Messi_20180626.jpg"},
@@ -144,11 +160,13 @@ const data = {
  ]
 };
 
+/* экран */
 function switchScreen(id){
  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
  document.getElementById(id).classList.add('active');
 }
 
+/* режимы */
 function goSpy(){
  mode = "spy";
  switchScreen("setup");
@@ -156,32 +174,43 @@ function goSpy(){
 
 function goHostage(){
  mode = "hostage";
- switchScreen("setup");
+ switchScreen("hostageSelect");
 }
 
-function startGame(){
+/* HOSTAGE ЛОГИКА */
+function startHostage(count){
+ players = [];
+ index = 0;
+
+ let roles8 = ["Босс","Стесняжка","Подрывник","Шпион"];
+ let roles10 = ["Босс","Стесняжка","Подрывник","Шпион","Обычный"];
+
+ let roles = count === 8 ? roles8 : roles10;
+
+ roles.forEach(role=>{
+  players.push({role:role, team:"red"});
+  players.push({role:role, team:"blue"});
+ });
+
+ players = players.sort(()=>Math.random()-0.5);
+
+ switchScreen("game");
+}
+
+/* SPY */
+function startSpy(){
  let count = +document.getElementById("players").value;
  spiesCount = +document.getElementById("spies").value;
+
+ if(spiesCount >= count){
+  alert("Слишком много шпионов");
+  return;
+ }
 
  players = [];
  index = 0;
 
- if(mode === "spy"){
-  if(spiesCount >= count){
-   alert("Слишком много шпионов");
-   return;
-  }
-  switchScreen("categories");
- } else {
-  // hostage логика
-  let roles = [];
-  hostageRoles.forEach(r=>{
-   roles.push({role:r, team:"red"});
-   roles.push({role:r, team:"blue"});
-  });
-  players = roles.sort(()=>Math.random()-0.5).slice(0, count);
-  switchScreen("game");
- }
+ switchScreen("categories");
 }
 
 function chooseCategory(c){
@@ -197,6 +226,7 @@ function chooseCategory(c){
  switchScreen("game");
 }
 
+/* игра */
 function nextPlayer(){
  if(index >= players.length){
   document.getElementById("card").innerHTML = "🎉 Все роли выданы";
@@ -210,7 +240,6 @@ function showCard(){
 
  if(mode === "spy"){
   let role = players[index];
-
   if(role === "spy"){
    card.innerHTML = "<h2>🕵️ ШПИОН</h2>";
   } else {
@@ -223,7 +252,7 @@ function showCard(){
   let cls = p.team === "red" ? "redBadge" : "blueBadge";
 
   card.innerHTML = `
-    <div class="teamBadge ${cls}">${p.team}</div>
+    <div class="teamBadge ${cls}">${p.team === "red" ? "Красные" : "Синие"}</div>
     <h2>${p.role}</h2>
   `;
  }
@@ -232,7 +261,9 @@ function showCard(){
  document.getElementById("overlay").style.display="none";
 }
 
-function restart(){ location.reload(); }
+function restart(){
+ location.reload();
+}
 </script>
 
 </body>
