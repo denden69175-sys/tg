@@ -8,96 +8,142 @@
 
 <style>
 body {
+    margin: 0;
     font-family: Arial;
-    background: #111;
+    background: linear-gradient(135deg, #0f0f0f, #1c1c1c);
     color: white;
     text-align: center;
-    margin: 0;
-    padding: 0;
 }
 
-.container {
-    margin-top: 80px;
+h1 {
+    margin-top: 30px;
 }
 
 .card {
+    width: 90%;
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 20px;
     background: #222;
-    padding: 30px;
-    border-radius: 16px;
-    margin: 20px;
-    font-size: 24px;
-    min-height: 80px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.6);
+    font-size: 20px;
+    transition: 0.3s;
+}
+
+img {
+    width: 100%;
+    border-radius: 15px;
+    margin-top: 10px;
 }
 
 button {
-    padding: 15px 20px;
+    padding: 12px 18px;
     border: none;
-    border-radius: 10px;
-    background: #4caf50;
-    color: white;
-    font-size: 18px;
+    border-radius: 12px;
+    margin: 10px;
+    font-size: 16px;
     cursor: pointer;
 }
-button:active {
-    transform: scale(0.98);
+
+.next {
+    background: #4caf50;
+    color: white;
+}
+
+.hide {
+    background: #ff4444;
+    color: white;
+}
+
+.start {
+    background: #2196f3;
+    color: white;
 }
 </style>
-
 </head>
 
 <body>
 
-<div class="container">
-    <h1>🕵️ Spy Game</h1>
+<h1>🕵️ Spy Game</h1>
 
-    <div class="card" id="card">
-        Нажмите чтобы начать
-    </div>
-
-    <button onclick="nextPlayer()">Следующий игрок ➡️</button>
+<div class="card" id="card">
+    Нажмите старт
 </div>
+
+<button class="start" onclick="startGame()">Начать игру</button>
+<button class="next" onclick="nextPlayer()">Следующий игрок ➡️</button>
+<button class="hide" onclick="hideCard()">Скрыть карту 🔒</button>
 
 <script>
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-let locationName = "🏖 Пляж";
+let players = [];
+let index = 0;
 
-// роли (позже можно сделать динамическими)
-let roles = [];
-let currentPlayer = 0;
-let gameStarted = false;
+let locations = [
+    {
+        name: "🏖 Пляж",
+        img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
+    },
+    {
+        name: "🏙 Город",
+        img: "https://images.unsplash.com/photo-1494526585095-c41746248156"
+    },
+    {
+        name: "🏔 Горы",
+        img: "https://images.unsplash.com/photo-1501785888041-af3ef285b470"
+    }
+];
 
-// создаём игру
-function initGame() {
-    roles = ["player", "player", "spy", "player"];
-    roles = roles.sort(() => Math.random() - 0.5);
-    currentPlayer = 0;
-    gameStarted = true;
+let spyImg = "https://cdn-icons-png.flaticon.com/512/3064/3064197.png";
+
+let currentLocation;
+
+function startGame() {
+    index = 0;
+
+    currentLocation = locations[Math.floor(Math.random() * locations.length)];
+
+    players = ["player","player","player","spy","player"];
+    players = players.sort(() => Math.random() - 0.5);
+
+    document.getElementById("card").innerHTML = "Игра началась! Передайте телефон 👇";
 }
 
-// кнопка
 function nextPlayer() {
     const card = document.getElementById("card");
 
-    if (!gameStarted) {
-        initGame();
+    if (players.length === 0) {
+        card.innerHTML = "Нажмите старт";
+        return;
     }
 
-    if (currentPlayer >= roles.length) {
+    if (index >= players.length) {
         card.innerHTML = "🎉 Все игроки посмотрели карты";
         return;
     }
 
-    let role = roles[currentPlayer];
+    let role = players[index];
 
     if (role === "spy") {
-        card.innerHTML = "🕵️ Ты ШПИОН!";
+        card.innerHTML = `
+            <h2>🕵️ Ты ШПИОН!</h2>
+            <img src="${spyImg}">
+        `;
     } else {
-        card.innerHTML = "📍 Место: " + locationName;
+        card.innerHTML = `
+            <h2>${currentLocation.name}</h2>
+            <img src="${currentLocation.img}">
+        `;
     }
 
-    currentPlayer++;
+    index++;
+}
+
+function hideCard() {
+    document.getElementById("card").innerHTML = "🔒 Передайте телефон следующему игроку";
 }
 </script>
 
