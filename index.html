@@ -2,207 +2,236 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Spy Game</title>
+<title>Game</title>
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
 body {
-    margin: 0;
+    margin:0;
     font-family: Arial;
-    background: #0f0f0f;
-    color: white;
-    text-align: center;
+    background:#0f0f0f;
+    color:white;
+    text-align:center;
 }
 
 h1 {
-    font-size: 30px;
-    margin-top: 25px;
+    font-size:30px;
+    margin-top:20px;
 }
 
-/* МЕНЮ */
-.menu {
-    margin-top: 30px;
+.menu, .subMenu {
+    margin-top:20px;
 }
 
 input {
-    padding: 16px;
-    margin: 12px;
-    border-radius: 12px;
-    border: none;
-    width: 90px;
-    text-align: center;
-    font-size: 20px;
+    padding:14px;
+    width:80px;
+    font-size:20px;
+    text-align:center;
+    border-radius:10px;
+    border:none;
 }
 
-/* 🔥 КНОПКИ БОЛЬШИЕ */
+/* 🔥 БОЛЬШИЕ КНОПКИ */
 button {
-    padding: 22px 28px;
-    border: none;
-    border-radius: 18px;
-    margin: 14px auto;
-    font-size: 24px;
-    cursor: pointer;
-
-    width: 92%;
-    max-width: 420px;
-
-    display: block;
-    min-height: 70px;
+    padding:22px;
+    width:92%;
+    max-width:420px;
+    margin:12px auto;
+    font-size:22px;
+    border:none;
+    border-radius:18px;
+    display:block;
+    min-height:70px;
 }
 
-.start {
-    background: #2196f3;
-    color: white;
-}
+.start {background:#2196f3;color:white;}
+.mode {background:#9c27b0;color:white;}
+.cat {background:#ff9800;color:white;}
+.next {background:#4caf50;color:white;}
 
-.next {
-    background: #4caf50;
-    color: white;
-}
-
-.show {
-    background: #ff9800;
-    color: white;
-}
-
-/* карточка */
 .card {
-    width: 92%;
-    max-width: 450px;
-    margin: 25px auto;
-    padding: 28px;
-    border-radius: 24px;
-    background: #222;
-    font-size: 24px;
+    width:92%;
+    max-width:450px;
+    margin:20px auto;
+    padding:25px;
+    background:#222;
+    border-radius:20px;
+    font-size:24px;
 }
 
 img {
-    width: 100%;
-    border-radius: 15px;
-    margin-top: 15px;
+    width:100%;
+    border-radius:15px;
+    margin-top:10px;
 }
 
-/* оверлей */
+/* overlay */
 .overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: black;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    z-index: 999;
-    padding: 20px;
-}
-
-.overlay h1 {
-    font-size: 28px;
+    position:fixed;
+    top:0;left:0;
+    width:100%;height:100%;
+    background:black;
+    display:none;
+    justify-content:center;
+    align-items:center;
+    flex-direction:column;
+    z-index:999;
 }
 </style>
 </head>
 
 <body>
 
-<h1>🕵️ Spy Game</h1>
+<h1>🎮 Spy Game</h1>
 
-<!-- МЕНЮ -->
+<!-- ВЫБОР РЕЖИМА -->
 <div class="menu" id="menu">
-    👥 Игроки:
-    <input id="playersCount" type="number" value="5" min="3" max="20">
 
-    🕵️ Шпионы:
-    <input id="spiesCount" type="number" value="1" min="1" max="5">
+<h2>Выбери режим</h2>
 
-    <button class="start" onclick="startGame()">▶ Начать игру</button>
+<button class="mode" onclick="chooseMode('spy')">🕵️ Шпион</button>
+<button class="mode" onclick="chooseMode('hostage')">🔒 Заложники</button>
+
+</div>
+
+<!-- ВЫБОР КАТЕГОРИИ -->
+<div class="subMenu" id="subMenu" style="display:none;">
+<h2>Выбери тему</h2>
+
+<button class="cat" onclick="chooseCategory('location')">📍 Локации</button>
+<button class="cat" onclick="chooseCategory('football')">⚽ Футболисты</button>
+<button class="cat" onclick="chooseCategory('clash')">🏆 Clash Royale</button>
 </div>
 
 <!-- ИГРА -->
-<div class="card" id="card" style="display:none;">
-    Нажмите старт
-</div>
+<div class="card" id="card" style="display:none;">Нажмите старт</div>
+
+<input id="playersCount" type="number" value="5" min="3" max="20" style="display:none;">
+<input id="spiesCount" type="number" value="1" min="1" max="5" style="display:none;">
 
 <button class="next" id="nextBtn" style="display:none;" onclick="nextPlayer()">
 ➡ Следующий игрок
 </button>
 
-<!-- ОВЕРЛЕЙ -->
+<!-- overlay -->
 <div class="overlay" id="overlay">
-    <h1>📱 Передайте телефон</h1>
-    <button class="show" onclick="showCard()">Я готов</button>
+<h1>📱 Передайте телефон</h1>
+<button class="start" onclick="showCard()">Я готов</button>
 </div>
 
 <script>
+
 const tg = window.Telegram.WebApp;
 tg.expand();
+
+let mode = "";
+let category = "";
 
 let players = [];
 let index = 0;
 let spies = 1;
-let locationData;
+let secret = "";
 
-let locations = [
-    {name:"🏖 Пляж", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e"},
-    {name:"🏙 Город", img:"https://images.unsplash.com/photo-1494526585095-c41746248156"},
-    {name:"🏔 Горы", img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470"},
-    {name:"🏟 Стадион", img:"https://images.unsplash.com/photo-1508098682722-e99c43a406b2"}
-];
+const data = {
+    location:[
+        {name:"🏖 Пляж", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e"},
+        {name:"🏙 Город", img:"https://images.unsplash.com/photo-1494526585095-c41746248156"},
+        {name:"🏔 Горы", img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470"}
+    ],
 
-let spyImg = "https://cdn-icons-png.flaticon.com/512/3064/3064197.png";
+    football:[
+        {name:"⚽ Месси", img:"https://upload.wikimedia.org/wikipedia/commons/8/89/Lionel_Messi_20180626.jpg"},
+        {name:"⚽ Роналду", img:"https://upload.wikimedia.org/wikipedia/commons/8/8c/Cristiano_Ronaldo_2018.jpg"}
+    ],
 
-function startGame() {
+    clash:[
+        {name:"🏆 Король", img:"https://static.wikia.nocookie.net/clashroyale/images/"},
+        {name:"🏆 Лучница", img:"https://static.wikia.nocookie.net/clashroyale/images/"}
+    ]
+};
+
+function chooseMode(m){
+    mode = m;
+
+    if(mode === "spy"){
+        document.getElementById("menu").style.display = "none";
+        document.getElementById("subMenu").style.display = "block";
+    } else {
+        startGame("hostage","location");
+    }
+}
+
+function chooseCategory(c){
+    category = c;
+    startGame("spy", category);
+}
+
+function startGame(m,c){
+    mode = m;
+    category = c;
+
     let count = parseInt(document.getElementById("playersCount").value);
     spies = parseInt(document.getElementById("spiesCount").value);
 
-    index = 0;
     players = [];
+    index = 0;
 
-    locationData = locations[Math.floor(Math.random() * locations.length)];
+    if(mode === "spy"){
+        secret = data[category][Math.floor(Math.random()*data[category].length)];
 
-    for (let i = 0; i < spies; i++) players.push("spy");
-    for (let i = spies; i < count; i++) players.push("player");
+        for(let i=0;i<spies;i++) players.push("spy");
+        for(let i=spies;i<count;i++) players.push("player");
 
-    players.sort(() => Math.random() - 0.5);
+        players.sort(()=>Math.random()-0.5);
+    } else {
+        for(let i=0;i<count;i++) players.push("hostage");
+    }
 
     document.getElementById("menu").style.display = "none";
+    document.getElementById("subMenu").style.display = "none";
     document.getElementById("card").style.display = "block";
     document.getElementById("nextBtn").style.display = "block";
 
-    document.getElementById("card").innerHTML = "Игра началась!";
+    document.getElementById("card").innerHTML = "🎮 Игра началась!";
 }
 
-function nextPlayer() {
-    if (index >= players.length) {
+function nextPlayer(){
+    if(index >= players.length){
         document.getElementById("card").innerHTML = "🎉 Роли розданы";
         document.getElementById("nextBtn").style.display = "none";
         return;
     }
-
     document.getElementById("overlay").style.display = "flex";
 }
 
-function showCard() {
+function showCard(){
+
     let role = players[index];
     let card = document.getElementById("card");
 
-    if (role === "spy") {
+    if(mode === "hostage"){
         card.innerHTML = `
-            <h2>🕵️ Ты ШПИОН!</h2>
-            <img src="${spyImg}">
+            <h2>🔒 Ты заложник</h2>
+        `;
+    }
+    else if(role === "spy"){
+        card.innerHTML = `
+            <h2>🕵️ ШПИОН</h2>
+            <img src="https://cdn-icons-png.flaticon.com/512/3064/3064197.png">
         `;
     } else {
         card.innerHTML = `
-            <h2>${locationData.name}</h2>
-            <img src="${locationData.img}">
+            <h2>${secret.name}</h2>
+            <img src="${secret.img}">
         `;
     }
 
     index++;
     document.getElementById("overlay").style.display = "none";
 }
+
 </script>
 
 </body>
