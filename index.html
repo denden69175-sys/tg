@@ -27,9 +27,7 @@ h1 { text-align:center; margin:20px 0; }
     flex-direction:column;
 }
 
-.screen.active {
-    display:flex;
-}
+.screen.active { display:flex; }
 
 .card {
     background:#1a1a1a;
@@ -43,35 +41,16 @@ h1 { text-align:center; margin:20px 0; }
 button {
     padding:16px;
     width:90%;
-    max-width:420px;
     margin:10px auto;
     font-size:18px;
     border:none;
     border-radius:20px;
-    cursor:pointer;
 }
 
-.mode { background:#9c27b0; color:#fff; }
-.start { background:#2196f3; color:#fff; }
-.next { background:#4caf50; color:#fff; }
-
-.teamBadge {
- padding:6px 14px;
- border-radius:12px;
- margin-bottom:10px;
- font-size:14px;
- font-weight:bold;
-}
-
-.redBadge {
- background:rgba(229,57,53,0.2);
- color:#ff5252;
-}
-
-.blueBadge {
- background:rgba(30,136,229,0.2);
- color:#42a5f5;
-}
+.mode { background:#9c27b0; color:white; }
+.start { background:#2196f3; color:white; }
+.next { background:#4caf50; color:white; }
+.cat { background:#ff9800; color:white; }
 
 .overlay {
     position:fixed;
@@ -82,8 +61,16 @@ button {
     justify-content:center;
     align-items:center;
     flex-direction:column;
-    z-index:1000;
 }
+
+.teamBadge {
+ padding:6px 12px;
+ border-radius:10px;
+ margin-bottom:10px;
+}
+
+.redBadge { background:#ff5252; }
+.blueBadge { background:#42a5f5; }
 </style>
 </head>
 
@@ -95,40 +82,37 @@ button {
 <div id="menu" class="screen active">
 <div class="card">
 <h2>Выбери режим</h2>
-<button class="mode" onclick="openSpy()">🕵️ Шпион</button>
-<button class="mode" onclick="openHostage()">🔒 Заложники</button>
+<button class="mode" onclick="goSpy()">🕵️ Шпион</button>
+<button class="mode" onclick="goHostage()">🔒 Заложники</button>
 </div>
 </div>
 
-<!-- HOSTAGE -->
-<div id="hostageSelect" class="screen">
-<div class="card">
-<h2>Игроки</h2>
-<button class="start" onclick="startHostage(8)">8 игроков</button>
-<button class="start" onclick="startHostage(10)">10 игроков</button>
-</div>
-</div>
-
-<!-- SPY -->
+<!-- SETUP -->
 <div id="setup" class="screen">
 <div class="card">
 <h2>Настройки</h2>
-<p>Игроки</p>
-<input id="players" type="number" value="5">
-<p>Шпионы</p>
-<input id="spies" type="number" value="1">
-<button class="start" onclick="startSpy()">Далее</button>
+<input id="players" type="number" value="5"><br>
+<input id="spies" type="number" value="1"><br>
+<button class="start" onclick="startGame()">Далее</button>
+</div>
+</div>
+
+<!-- CATEGORY -->
+<div id="categories" class="screen">
+<div class="card">
+<h2>Категория</h2>
+<button class="cat" onclick="chooseCategory('location')">📍 Локации</button>
+<button class="cat" onclick="chooseCategory('people')">👤 Люди</button>
 </div>
 </div>
 
 <!-- GAME -->
 <div id="game" class="screen">
-<div class="card" id="card">Нажми "Следующий игрок"</div>
+<div class="card" id="card">Нажми далее</div>
 <button class="next" onclick="nextPlayer()">Следующий игрок</button>
 <button onclick="restart()">🔁 Заново</button>
 </div>
 
-<!-- OVERLAY -->
 <div class="overlay" id="overlay">
 <h2>Передай телефон</h2>
 <button onclick="showCard()">Открыть</button>
@@ -138,69 +122,81 @@ button {
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-let mode = null;
+let mode = "";
 let players = [];
 let index = 0;
+let spiesCount = 1;
+let secret = null;
 
-const hostageRolesFull = ["Босс","Шпион","Стесняжка","Подрывник","Обычный"];
-const hostageRolesNoCivil = ["Босс","Шпион","Стесняжка","Подрывник"];
+// hostage роли
+const hostageRoles = ["Босс","Шпион","Подрывник","Стесняжка"];
 
-// --- экран ---
+// данные
+const data = {
+ location:[
+  {name:"Пляж", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e"},
+  {name:"Город", img:"https://images.unsplash.com/photo-1494526585095-c41746248156"},
+  {name:"Горы", img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470"}
+ ],
+ people:[
+  {name:"Месси", img:"https://upload.wikimedia.org/wikipedia/commons/8/89/Lionel_Messi_20180626.jpg"},
+  {name:"Роналду", img:"https://upload.wikimedia.org/wikipedia/commons/5/5c/Cristiano_Ronaldo_2018.jpg"}
+ ]
+};
+
 function switchScreen(id){
  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
  document.getElementById(id).classList.add('active');
 }
 
-// --- меню ---
-function openSpy(){
+function goSpy(){
  mode = "spy";
  switchScreen("setup");
 }
 
-function openHostage(){
+function goHostage(){
  mode = "hostage";
- switchScreen("hostageSelect");
+ switchScreen("setup");
 }
 
-// --- запуск hostage ---
-function startHostage(count){
- mode = "hostage";
- players = [];
- index = 0;
-
- let base = count === 8 ? hostageRolesNoCivil : hostageRolesFull;
-
- base.forEach(role=>{
-  players.push({role:role, team:'red'});
-  players.push({role:role, team:'blue'});
- });
-
- players.sort(()=>Math.random()-0.5);
- switchScreen("game");
-}
-
-// --- запуск spy ---
-function startSpy(){
- mode = "spy";
- players = [];
- index = 0;
-
+function startGame(){
  let count = +document.getElementById("players").value;
- let spies = +document.getElementById("spies").value;
+ spiesCount = +document.getElementById("spies").value;
 
- if(spies >= count){
-  alert("Слишком много шпионов");
-  return;
+ players = [];
+ index = 0;
+
+ if(mode === "spy"){
+  if(spiesCount >= count){
+   alert("Слишком много шпионов");
+   return;
+  }
+  switchScreen("categories");
+ } else {
+  // hostage логика
+  let roles = [];
+  hostageRoles.forEach(r=>{
+   roles.push({role:r, team:"red"});
+   roles.push({role:r, team:"blue"});
+  });
+  players = roles.sort(()=>Math.random()-0.5).slice(0, count);
+  switchScreen("game");
  }
+}
 
- for(let i=0;i<spies;i++) players.push({role:'spy'});
- for(let i=spies;i<count;i++) players.push({role:'player'});
+function chooseCategory(c){
+ let count = +document.getElementById("players").value;
+
+ secret = data[c][Math.floor(Math.random()*data[c].length)];
+
+ for(let i=0;i<spiesCount;i++) players.push("spy");
+ for(let i=spiesCount;i<count;i++) players.push("player");
 
  players.sort(()=>Math.random()-0.5);
+
  switchScreen("game");
 }
 
-// --- следующий ---
 function nextPlayer(){
  if(index >= players.length){
   document.getElementById("card").innerHTML = "🎉 Все роли выданы";
@@ -209,37 +205,34 @@ function nextPlayer(){
  document.getElementById("overlay").style.display="flex";
 }
 
-// --- показать карту ---
 function showCard(){
- let p = players[index];
  let card = document.getElementById("card");
 
- if(mode === "hostage"){
-  let cls = p.team === 'red' ? 'redBadge' : 'blueBadge';
-  let name = p.team === 'red' ? 'Красные' : 'Синие';
-
-  card.innerHTML = `
-   <div class="teamBadge ${cls}">${name}</div>
-   <h2>${p.role}</h2>
-  `;
- }
-
  if(mode === "spy"){
-  if(p.role === "spy"){
+  let role = players[index];
+
+  if(role === "spy"){
    card.innerHTML = "<h2>🕵️ ШПИОН</h2>";
   } else {
-   card.innerHTML = "<h2>📍 Мирный игрок</h2>";
+   card.innerHTML = `<h2>${secret.name}</h2><img src="${secret.img}">`;
   }
+ }
+
+ if(mode === "hostage"){
+  let p = players[index];
+  let cls = p.team === "red" ? "redBadge" : "blueBadge";
+
+  card.innerHTML = `
+    <div class="teamBadge ${cls}">${p.team}</div>
+    <h2>${p.role}</h2>
+  `;
  }
 
  index++;
  document.getElementById("overlay").style.display="none";
 }
 
-// --- рестарт ---
-function restart(){
- location.reload();
-}
+function restart(){ location.reload(); }
 </script>
 
 </body>
