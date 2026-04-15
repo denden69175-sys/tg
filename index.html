@@ -2,8 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Game</title>
-
+<title>Spy Game</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 
 <style>
@@ -15,25 +14,21 @@ body {
     text-align:center;
 }
 
-h1 {
-    font-size:30px;
-    margin-top:20px;
-}
+h1 { font-size:30px; margin-top:20px; }
 
-.menu, .subMenu {
-    margin-top:20px;
-}
+.menu, .setup, .subMenu { margin-top:20px; }
 
 input {
     padding:14px;
-    width:80px;
+    width:90px;
     font-size:20px;
     text-align:center;
     border-radius:10px;
     border:none;
+    margin:10px;
 }
 
-/* 🔥 БОЛЬШИЕ КНОПКИ */
+/* 🔥 большие кнопки */
 button {
     padding:22px;
     width:92%;
@@ -46,10 +41,10 @@ button {
     min-height:70px;
 }
 
-.start {background:#2196f3;color:white;}
-.mode {background:#9c27b0;color:white;}
-.cat {background:#ff9800;color:white;}
-.next {background:#4caf50;color:white;}
+.mode { background:#9c27b0; color:white; }
+.next { background:#4caf50; color:white; }
+.cat { background:#ff9800; color:white; }
+.start { background:#2196f3; color:white; }
 
 .card {
     width:92%;
@@ -67,7 +62,6 @@ img {
     margin-top:10px;
 }
 
-/* overlay */
 .overlay {
     position:fixed;
     top:0;left:0;
@@ -86,14 +80,25 @@ img {
 
 <h1>🎮 Spy Game</h1>
 
-<!-- ВЫБОР РЕЖИМА -->
+<!-- ГЛАВНОЕ МЕНЮ -->
 <div class="menu" id="menu">
-
 <h2>Выбери режим</h2>
 
 <button class="mode" onclick="chooseMode('spy')">🕵️ Шпион</button>
 <button class="mode" onclick="chooseMode('hostage')">🔒 Заложники</button>
+</div>
 
+<!-- НАСТРОЙКА ИГРЫ -->
+<div class="setup" id="setup" style="display:none;">
+<h2>Настройки</h2>
+
+👥 Игроки:<br>
+<input id="playersCount" type="number" value="5" min="3" max="20"><br>
+
+🕵️ Шпионы:<br>
+<input id="spiesCount" type="number" value="1" min="1" max="5"><br>
+
+<button class="start" onclick="toCategory()">Далее ➜</button>
 </div>
 
 <!-- ВЫБОР КАТЕГОРИИ -->
@@ -108,14 +113,11 @@ img {
 <!-- ИГРА -->
 <div class="card" id="card" style="display:none;">Нажмите старт</div>
 
-<input id="playersCount" type="number" value="5" min="3" max="20" style="display:none;">
-<input id="spiesCount" type="number" value="1" min="1" max="5" style="display:none;">
-
 <button class="next" id="nextBtn" style="display:none;" onclick="nextPlayer()">
 ➡ Следующий игрок
 </button>
 
-<!-- overlay -->
+<!-- ОВЕРЛЕЙ -->
 <div class="overlay" id="overlay">
 <h1>📱 Передайте телефон</h1>
 <button class="start" onclick="showCard()">Я готов</button>
@@ -140,12 +142,10 @@ const data = {
         {name:"🏙 Город", img:"https://images.unsplash.com/photo-1494526585095-c41746248156"},
         {name:"🏔 Горы", img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470"}
     ],
-
     football:[
         {name:"⚽ Месси", img:"https://upload.wikimedia.org/wikipedia/commons/8/89/Lionel_Messi_20180626.jpg"},
         {name:"⚽ Роналду", img:"https://upload.wikimedia.org/wikipedia/commons/8/8c/Cristiano_Ronaldo_2018.jpg"}
     ],
-
     clash:[
         {name:"🏆 Король", img:"https://static.wikia.nocookie.net/clashroyale/images/"},
         {name:"🏆 Лучница", img:"https://static.wikia.nocookie.net/clashroyale/images/"}
@@ -157,10 +157,15 @@ function chooseMode(m){
 
     if(mode === "spy"){
         document.getElementById("menu").style.display = "none";
-        document.getElementById("subMenu").style.display = "block";
+        document.getElementById("setup").style.display = "block";
     } else {
         startGame("hostage","location");
     }
+}
+
+function toCategory(){
+    document.getElementById("setup").style.display = "none";
+    document.getElementById("subMenu").style.display = "block";
 }
 
 function chooseCategory(c){
@@ -189,7 +194,6 @@ function startGame(m,c){
         for(let i=0;i<count;i++) players.push("hostage");
     }
 
-    document.getElementById("menu").style.display = "none";
     document.getElementById("subMenu").style.display = "none";
     document.getElementById("card").style.display = "block";
     document.getElementById("nextBtn").style.display = "block";
@@ -212,9 +216,7 @@ function showCard(){
     let card = document.getElementById("card");
 
     if(mode === "hostage"){
-        card.innerHTML = `
-            <h2>🔒 Ты заложник</h2>
-        `;
+        card.innerHTML = `<h2>🔒 Заложник</h2>`;
     }
     else if(role === "spy"){
         card.innerHTML = `
