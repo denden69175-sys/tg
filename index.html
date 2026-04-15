@@ -15,41 +15,19 @@ body {
     text-align: center;
 }
 
-/* экран передачи телефона */
-.overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: black;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    z-index: 999;
+/* меню */
+.menu {
+    margin-top: 40px;
 }
 
-.overlay h1 {
-    font-size: 26px;
-    margin-bottom: 20px;
-}
-
-/* карточка */
-.card {
-    width: 90%;
-    max-width: 400px;
-    margin: 20px auto;
-    padding: 20px;
-    border-radius: 20px;
-    background: #222;
-    box-shadow: 0 0 20px rgba(0,0,0,0.6);
-}
-
-img {
-    width: 100%;
-    border-radius: 15px;
-    margin-top: 10px;
+input {
+    padding: 10px;
+    margin: 10px;
+    border-radius: 10px;
+    border: none;
+    width: 60px;
+    text-align: center;
+    font-size: 18px;
 }
 
 /* кнопки */
@@ -66,6 +44,36 @@ button {
 .next { background:#4caf50; color:white; }
 .show { background:#ff9800; color:white; }
 
+/* карточка */
+.card {
+    width: 90%;
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 20px;
+    background: #222;
+}
+
+img {
+    width: 100%;
+    border-radius: 15px;
+    margin-top: 10px;
+}
+
+/* оверлей */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: black;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    z-index: 999;
+}
 </style>
 </head>
 
@@ -73,16 +81,33 @@ button {
 
 <h1>🕵️ Spy Game</h1>
 
-<div class="card" id="card">
+<!-- МЕНЮ -->
+<div class="menu" id="menu">
+    <div>
+        👥 Игроки:
+        <input id="playersCount" type="number" value="5" min="3" max="20">
+    </div>
+
+    <div>
+        🕵️ Шпионы:
+        <input id="spiesCount" type="number" value="1" min="1" max="5">
+    </div>
+
+    <button class="start" onclick="startGame()">Начать игру</button>
+</div>
+
+<!-- ИГРА -->
+<div class="card" id="card" style="display:none;">
     Нажмите старт
 </div>
 
-<button class="start" onclick="startGame()">Начать игру</button>
-<button class="next" onclick="nextPlayer()">Следующий игрок ➡️</button>
+<button class="next" id="nextBtn" style="display:none;" onclick="nextPlayer()">
+Следующий игрок ➡️
+</button>
 
-<!-- ОВЕРЛЕЙ (ПЕРЕДАЧА ТЕЛЕФОНА) -->
+<!-- ОВЕРЛЕЙ -->
 <div class="overlay" id="overlay">
-    <h1>📱 Передайте телефон следующему игроку</h1>
+    <h1>📱 Передайте телефон</h1>
     <button class="show" onclick="showCard()">Я готов ▶</button>
 </div>
 
@@ -92,35 +117,39 @@ tg.expand();
 
 let players = [];
 let index = 0;
-let currentLocation;
+let spies = 1;
+let locationData;
 
 let locations = [
-    {
-        name: "🏖 Пляж",
-        img: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e"
-    },
-    {
-        name: "🏙 Город",
-        img: "https://images.unsplash.com/photo-1494526585095-c41746248156"
-    },
-    {
-        name: "🏔 Горы",
-        img: "https://images.unsplash.com/photo-1501785888041-af3ef285b470"
-    }
+    {name:"🏖 Пляж", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e"},
+    {name:"🏙 Город", img:"https://images.unsplash.com/photo-1494526585095-c41746248156"},
+    {name:"🏔 Горы", img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470"}
 ];
 
 let spyImg = "https://cdn-icons-png.flaticon.com/512/3064/3064197.png";
 
 function startGame() {
+    let count = parseInt(document.getElementById("playersCount").value);
+    spies = parseInt(document.getElementById("spiesCount").value);
+
     index = 0;
 
-    currentLocation = locations[Math.floor(Math.random() * locations.length)];
+    // случайное место
+    locationData = locations[Math.floor(Math.random() * locations.length)];
 
-    players = ["player","player","player","spy","player"];
+    // создаём роли
+    players = [];
+
+    for (let i = 0; i < spies; i++) players.push("spy");
+    for (let i = spies; i < count; i++) players.push("player");
+
     players = players.sort(() => Math.random() - 0.5);
 
-    document.getElementById("card").innerHTML =
-        "Игра началась!";
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("card").style.display = "block";
+    document.getElementById("nextBtn").style.display = "inline-block";
+
+    document.getElementById("card").innerHTML = "Игра началась!";
 }
 
 function nextPlayer() {
@@ -129,16 +158,12 @@ function nextPlayer() {
         return;
     }
 
-    // ПРЯЧЕМ КАРТУ
-    document.getElementById("card").innerHTML = "🔒 Готовим карту...";
-    
-    // ПОКАЗЫВАЕМ ОВЕРЛЕЙ
     document.getElementById("overlay").style.display = "flex";
 }
 
 function showCard() {
-    const role = players[index];
-    const card = document.getElementById("card");
+    let role = players[index];
+    let card = document.getElementById("card");
 
     if (role === "spy") {
         card.innerHTML = `
@@ -147,14 +172,12 @@ function showCard() {
         `;
     } else {
         card.innerHTML = `
-            <h2>${currentLocation.name}</h2>
-            <img src="${currentLocation.img}">
+            <h2>${locationData.name}</h2>
+            <img src="${locationData.img}">
         `;
     }
 
     index++;
-
-    // СКРЫВАЕМ ОВЕРЛЕЙ СРАЗУ ПОСЛЕ ПОКАЗА
     document.getElementById("overlay").style.display = "none";
 }
 </script>
