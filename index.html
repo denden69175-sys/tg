@@ -13,7 +13,6 @@ body {
     color:#e0e0e0;
     overflow:hidden;
 }
-
 h1 { text-align:center; margin:20px 0; color:#fff; }
 
 .screen {
@@ -26,11 +25,10 @@ h1 { text-align:center; margin:20px 0; color:#fff; }
     justify-content:center;
     align-items:center;
     flex-direction:column;
-    transition:transform 0.5s ease, opacity 0.5s ease;
 }
 
-.hidden { transform:translateX(100%); opacity:0; display:none; }
-.active { transform:translateX(0); opacity:1; display:flex; z-index:2; }
+.hidden { display:none; }
+.active { display:flex; z-index:2; }
 
 .card {
     background:#1a1a1a;
@@ -39,7 +37,6 @@ h1 { text-align:center; margin:20px 0; color:#fff; }
     width:90%;
     max-width:420px;
     text-align:center;
-    box-shadow:0 10px 30px rgba(0,0,0,0.6);
 }
 
 button {
@@ -51,7 +48,6 @@ button {
     border:none;
     border-radius:20px;
     display:block;
-    font-weight:600;
     cursor:pointer;
 }
 
@@ -71,13 +67,11 @@ button {
 .redBadge {
  background:rgba(229,57,53,0.2);
  color:#ff5252;
- border:1px solid rgba(255,82,82,0.5);
 }
 
 .blueBadge {
  background:rgba(30,136,229,0.2);
  color:#42a5f5;
- border:1px solid rgba(66,165,245,0.5);
 }
 
 .overlay {
@@ -89,7 +83,6 @@ button {
     justify-content:center;
     align-items:center;
     flex-direction:column;
-    z-index:1000;
 }
 </style>
 </head>
@@ -102,8 +95,8 @@ button {
 <div id="menu" class="screen active">
 <div class="card">
 <h2>Выбери режим</h2>
-<button class="mode" onclick="goTo('setup','spy')">🕵️ Шпион</button>
-<button class="mode" onclick="goTo('hostageSelect','hostage')">🔒 Заложники</button>
+<button class="mode" onclick="startSpySetup()">🕵️ Шпион</button>
+<button class="mode" onclick="startHostageSelect()">🔒 Заложники</button>
 </div>
 </div>
 
@@ -124,7 +117,7 @@ button {
 <input id="players" type="number" value="5">
 <p>Шпионы</p>
 <input id="spies" type="number" value="1">
-<button class="start" onclick="startGame()">Далее</button>
+<button class="start" onclick="startSpy()">Далее</button>
 </div>
 </div>
 
@@ -144,7 +137,7 @@ button {
 const tg = window.Telegram.WebApp;
 tg.expand();
 
-let mode = "";
+let mode = null;
 let players = [];
 let index = 0;
 
@@ -160,12 +153,18 @@ function switchScreen(next){
  document.getElementById(next).classList.add('active');
 }
 
-function goTo(screen, m){
- mode = m;
- switchScreen(screen);
+function startSpySetup(){
+ mode = "spy";
+ switchScreen('setup');
+}
+
+function startHostageSelect(){
+ mode = "hostage";
+ switchScreen('hostageSelect');
 }
 
 function startHostage(count){
+ mode = "hostage";
  players = [];
  index = 0;
 
@@ -182,7 +181,11 @@ function startHostage(count){
  switchScreen('game');
 }
 
-function startGame(){
+function startSpy(){
+ mode = "spy";
+ players = [];
+ index = 0;
+
  let count = +document.getElementById("players").value;
  let spies = +document.getElementById("spies").value;
 
@@ -190,9 +193,6 @@ function startGame(){
   alert("Слишком много шпионов");
   return;
  }
-
- players = [];
- index = 0;
 
  for(let i=0;i<spies;i++) players.push({role:'spy'});
  for(let i=spies;i<count;i++) players.push({role:'player'});
@@ -224,7 +224,9 @@ function showCard(){
     </div>
     <h2>${p.role}</h2>
   `;
- } else {
+ }
+
+ if(mode === 'spy'){
   if(p.role === 'spy'){
    card.innerHTML = `<h2>🕵️ ШПИОН</h2>`;
   } else {
