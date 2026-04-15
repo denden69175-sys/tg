@@ -11,9 +11,9 @@ body {
     font-family: 'Segoe UI', sans-serif;
     background:#0f0f0f;
     color:#e0e0e0;
-    overflow:hidden;
 }
-h1 { text-align:center; margin:20px 0; color:#fff; }
+
+h1 { text-align:center; margin:20px 0; }
 
 .screen {
     position:absolute;
@@ -21,14 +21,15 @@ h1 { text-align:center; margin:20px 0; color:#fff; }
     height:100%;
     top:0;
     left:0;
-    display:flex;
+    display:none;
     justify-content:center;
     align-items:center;
     flex-direction:column;
 }
 
-.hidden { display:none; }
-.active { display:flex; z-index:2; }
+.screen.active {
+    display:flex;
+}
 
 .card {
     background:#1a1a1a;
@@ -40,14 +41,13 @@ h1 { text-align:center; margin:20px 0; color:#fff; }
 }
 
 button {
-    padding:18px;
+    padding:16px;
     width:90%;
     max-width:420px;
     margin:10px auto;
     font-size:18px;
     border:none;
     border-radius:20px;
-    display:block;
     cursor:pointer;
 }
 
@@ -56,7 +56,6 @@ button {
 .next { background:#4caf50; color:#fff; }
 
 .teamBadge {
- display:inline-block;
  padding:6px 14px;
  border-radius:12px;
  margin-bottom:10px;
@@ -83,6 +82,7 @@ button {
     justify-content:center;
     align-items:center;
     flex-direction:column;
+    z-index:1000;
 }
 </style>
 </head>
@@ -95,13 +95,13 @@ button {
 <div id="menu" class="screen active">
 <div class="card">
 <h2>Выбери режим</h2>
-<button class="mode" onclick="startSpySetup()">🕵️ Шпион</button>
-<button class="mode" onclick="startHostageSelect()">🔒 Заложники</button>
+<button class="mode" onclick="openSpy()">🕵️ Шпион</button>
+<button class="mode" onclick="openHostage()">🔒 Заложники</button>
 </div>
 </div>
 
-<!-- HOSTAGE PLAYER COUNT -->
-<div id="hostageSelect" class="screen hidden">
+<!-- HOSTAGE -->
+<div id="hostageSelect" class="screen">
 <div class="card">
 <h2>Игроки</h2>
 <button class="start" onclick="startHostage(8)">8 игроков</button>
@@ -109,8 +109,8 @@ button {
 </div>
 </div>
 
-<!-- SETUP SPY -->
-<div id="setup" class="screen hidden">
+<!-- SPY -->
+<div id="setup" class="screen">
 <div class="card">
 <h2>Настройки</h2>
 <p>Игроки</p>
@@ -122,12 +122,13 @@ button {
 </div>
 
 <!-- GAME -->
-<div id="game" class="screen hidden">
-<div class="card" id="card">Нажми далее</div>
+<div id="game" class="screen">
+<div class="card" id="card">Нажми "Следующий игрок"</div>
 <button class="next" onclick="nextPlayer()">Следующий игрок</button>
 <button onclick="restart()">🔁 Заново</button>
 </div>
 
+<!-- OVERLAY -->
 <div class="overlay" id="overlay">
 <h2>Передай телефон</h2>
 <button onclick="showCard()">Открыть</button>
@@ -144,43 +145,41 @@ let index = 0;
 const hostageRolesFull = ["Босс","Шпион","Стесняжка","Подрывник","Обычный"];
 const hostageRolesNoCivil = ["Босс","Шпион","Стесняжка","Подрывник"];
 
-function switchScreen(next){
- document.querySelectorAll('.screen').forEach(s=>{
-  s.classList.remove('active');
-  s.classList.add('hidden');
- });
- document.getElementById(next).classList.remove('hidden');
- document.getElementById(next).classList.add('active');
+// --- экран ---
+function switchScreen(id){
+ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+ document.getElementById(id).classList.add('active');
 }
 
-function startSpySetup(){
+// --- меню ---
+function openSpy(){
  mode = "spy";
- switchScreen('setup');
+ switchScreen("setup");
 }
 
-function startHostageSelect(){
+function openHostage(){
  mode = "hostage";
- switchScreen('hostageSelect');
+ switchScreen("hostageSelect");
 }
 
+// --- запуск hostage ---
 function startHostage(count){
  mode = "hostage";
  players = [];
  index = 0;
 
- let baseRoles = count === 8 ? hostageRolesNoCivil : hostageRolesFull;
- let roles = [];
+ let base = count === 8 ? hostageRolesNoCivil : hostageRolesFull;
 
- baseRoles.forEach(role=>{
-  roles.push({role:role, team:'red'});
-  roles.push({role:role, team:'blue'});
+ base.forEach(role=>{
+  players.push({role:role, team:'red'});
+  players.push({role:role, team:'blue'});
  });
 
- players = roles.sort(()=>Math.random()-0.5);
-
- switchScreen('game');
+ players.sort(()=>Math.random()-0.5);
+ switchScreen("game");
 }
 
+// --- запуск spy ---
 function startSpy(){
  mode = "spy";
  players = [];
@@ -198,10 +197,10 @@ function startSpy(){
  for(let i=spies;i<count;i++) players.push({role:'player'});
 
  players.sort(()=>Math.random()-0.5);
-
- switchScreen('game');
+ switchScreen("game");
 }
 
+// --- следующий ---
 function nextPlayer(){
  if(index >= players.length){
   document.getElementById("card").innerHTML = "🎉 Все роли выданы";
@@ -210,27 +209,26 @@ function nextPlayer(){
  document.getElementById("overlay").style.display="flex";
 }
 
+// --- показать карту ---
 function showCard(){
  let p = players[index];
  let card = document.getElementById("card");
 
- if(mode === 'hostage'){
-  let badgeClass = p.team === 'red' ? 'redBadge' : 'blueBadge';
-  let emoji = p.team === 'red' ? '🔴' : '🔵';
+ if(mode === "hostage"){
+  let cls = p.team === 'red' ? 'redBadge' : 'blueBadge';
+  let name = p.team === 'red' ? 'Красные' : 'Синие';
 
   card.innerHTML = `
-    <div class="teamBadge ${badgeClass}">
-      ${emoji} ${p.team === 'red' ? 'Красные' : 'Синие'}
-    </div>
-    <h2>${p.role}</h2>
+   <div class="teamBadge ${cls}">${name}</div>
+   <h2>${p.role}</h2>
   `;
  }
 
- if(mode === 'spy'){
-  if(p.role === 'spy'){
-   card.innerHTML = `<h2>🕵️ ШПИОН</h2>`;
+ if(mode === "spy"){
+  if(p.role === "spy"){
+   card.innerHTML = "<h2>🕵️ ШПИОН</h2>";
   } else {
-   card.innerHTML = `<h2>📍 Мирный игрок</h2>`;
+   card.innerHTML = "<h2>📍 Мирный игрок</h2>";
   }
  }
 
@@ -238,6 +236,7 @@ function showCard(){
  document.getElementById("overlay").style.display="none";
 }
 
+// --- рестарт ---
 function restart(){
  location.reload();
 }
