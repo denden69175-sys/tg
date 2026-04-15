@@ -15,8 +15,8 @@ body {
     text-align: center;
 }
 
-/* заголовок */
 h1 {
+    font-size: 30px;
     margin-top: 25px;
 }
 
@@ -26,41 +26,55 @@ h1 {
 }
 
 input {
-    padding: 14px;
+    padding: 16px;
     margin: 12px;
     border-radius: 12px;
     border: none;
-    width: 80px;
+    width: 90px;
     text-align: center;
     font-size: 20px;
 }
 
-/* КНОПКИ — СИЛЬНО УВЕЛИЧЕНЫ */
+/* 🔥 КНОПКИ БОЛЬШИЕ */
 button {
-    padding: 18px 24px;
+    padding: 22px 28px;
     border: none;
-    border-radius: 16px;
-    margin: 12px;
-    font-size: 20px;
+    border-radius: 18px;
+    margin: 14px auto;
+    font-size: 24px;
     cursor: pointer;
-    width: 85%;
-    max-width: 350px;
+
+    width: 92%;
+    max-width: 420px;
+
+    display: block;
+    min-height: 70px;
 }
 
-/* разные кнопки */
-.start { background:#2196f3; color:white; }
-.next { background:#4caf50; color:white; }
-.show { background:#ff9800; color:white; }
+.start {
+    background: #2196f3;
+    color: white;
+}
+
+.next {
+    background: #4caf50;
+    color: white;
+}
+
+.show {
+    background: #ff9800;
+    color: white;
+}
 
 /* карточка */
 .card {
-    width: 90%;
-    max-width: 420px;
-    margin: 20px auto;
-    padding: 25px;
-    border-radius: 22px;
+    width: 92%;
+    max-width: 450px;
+    margin: 25px auto;
+    padding: 28px;
+    border-radius: 24px;
     background: #222;
-    font-size: 22px;
+    font-size: 24px;
 }
 
 img {
@@ -86,7 +100,7 @@ img {
 }
 
 .overlay h1 {
-    font-size: 26px;
+    font-size: 28px;
 }
 </style>
 </head>
@@ -97,15 +111,11 @@ img {
 
 <!-- МЕНЮ -->
 <div class="menu" id="menu">
-    <div>
-        👥 Игроки:
-        <input id="playersCount" type="number" value="5" min="3" max="20">
-    </div>
+    👥 Игроки:
+    <input id="playersCount" type="number" value="5" min="3" max="20">
 
-    <div>
-        🕵️ Шпионы:
-        <input id="spiesCount" type="number" value="1" min="1" max="5">
-    </div>
+    🕵️ Шпионы:
+    <input id="spiesCount" type="number" value="1" min="1" max="5">
 
     <button class="start" onclick="startGame()">▶ Начать игру</button>
 </div>
@@ -137,7 +147,8 @@ let locationData;
 let locations = [
     {name:"🏖 Пляж", img:"https://images.unsplash.com/photo-1507525428034-b723cf961d3e"},
     {name:"🏙 Город", img:"https://images.unsplash.com/photo-1494526585095-c41746248156"},
-    {name:"🏔 Горы", img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470"}
+    {name:"🏔 Горы", img:"https://images.unsplash.com/photo-1501785888041-af3ef285b470"},
+    {name:"🏟 Стадион", img:"https://images.unsplash.com/photo-1508098682722-e99c43a406b2"}
 ];
 
 let spyImg = "https://cdn-icons-png.flaticon.com/512/3064/3064197.png";
@@ -147,26 +158,25 @@ function startGame() {
     spies = parseInt(document.getElementById("spiesCount").value);
 
     index = 0;
+    players = [];
 
     locationData = locations[Math.floor(Math.random() * locations.length)];
-
-    players = [];
 
     for (let i = 0; i < spies; i++) players.push("spy");
     for (let i = spies; i < count; i++) players.push("player");
 
-    players = players.sort(() => Math.random() - 0.5);
+    players.sort(() => Math.random() - 0.5);
 
     document.getElementById("menu").style.display = "none";
     document.getElementById("card").style.display = "block";
-    document.getElementById("nextBtn").style.display = "inline-block";
+    document.getElementById("nextBtn").style.display = "block";
 
     document.getElementById("card").innerHTML = "Игра началась!";
 }
 
 function nextPlayer() {
     if (index >= players.length) {
-        document.getElementById("card").innerHTML = "🎉 Все игроки получили роли";
+        document.getElementById("card").innerHTML = "🎉 Роли розданы";
         document.getElementById("nextBtn").style.display = "none";
         return;
     }
