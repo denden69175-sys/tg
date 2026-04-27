@@ -1,8 +1,6 @@
 <script>
-const tg = window.Telegram?.WebApp;
-if (tg) tg.expand();
-
-// ================= GAME =================
+const tg = window.Telegram.WebApp;
+tg.expand();
 
 let mode = "";
 let players = [];
@@ -121,9 +119,7 @@ function showCard(){
   if(role === "spy"){
    card.innerHTML = "<h2>🕵️ ШПИОН</h2>";
   } else {
-   card.innerHTML = `<h2>${secret.name}</h2>${
-     secret.img ? `<img src="${secret.img}">` : ""
-   }`;
+   card.innerHTML = `<h2>${secret.name}</h2><img src="${secret.img}">`;
   }
  }
 
