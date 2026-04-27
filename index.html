@@ -1,42 +1,35 @@
 <script>
-// ================= SECURITY =================
+// ================= SECURITY (БЕЗ ЛОМАЮЩИХ ФИЧ) =================
 
-const tg = window.Telegram.WebApp;
-tg.expand();
+const tg = window.Telegram?.WebApp;
+if (tg) tg.expand();
 
-// Проверка Telegram (не даёт открыть вне Telegram)
-if (!tg.initData || tg.initData.length === 0) {
-    document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px'>Открой игру через Telegram</h2>";
-    throw new Error("Not Telegram");
+// ⚠️ мягкая проверка Telegram (не ломает игру)
+if (!tg || !tg.initData) {
+    console.warn("Открыто вне Telegram");
 }
 
-// анти DevTools (простая)
-setInterval(() => {
-    const w = window.outerWidth - window.innerWidth;
-    const h = window.outerHeight - window.innerHeight;
-    if (w > 160 || h > 160) {
-        document.body.innerHTML = "🚫 Доступ запрещён";
-    }
-}, 1000);
+// ❌ УБРАЛИ анти DevTools (он ломал Telegram WebView)
+// ❌ УБРАЛИ Object.seal (он ломал push)
 
-// блок правого клика
+// блок правого клика (безопасно)
 document.addEventListener("contextmenu", e => e.preventDefault());
 
-// блок F12 / Ctrl+Shift+I
+// блок F12 (мягкий)
 document.addEventListener("keydown", e => {
-    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === "I")) {
+    if (e.key === "F12") {
         e.preventDefault();
     }
 });
 
-// ================= GAME (ТВОЙ КОД С ПРАВКАМИ) =================
+// ================= GAME =================
 
 let mode = "";
-let players = Object.seal([]); // защита массива
+let players = []; // ✅ нормальный массив
 let index = 0;
 let spiesCount = 1;
 
-// 🔐 скрытый secret
+// 🔐 скрытый secret (оставили)
 let _secret = null;
 Object.defineProperty(window, "secret", {
     get: () => undefined,
@@ -90,7 +83,7 @@ function goHostage(){
 
 /* HOSTAGE */
 function startHostage(count){
- players = Object.seal([]);
+ players = []; // ✅ исправлено
  index = 0;
 
  let roles8 = ["Босс","Стесняжка","Подрывник","Шпион"];
@@ -118,7 +111,7 @@ function startSpy(){
   return;
  }
 
- players = Object.seal([]);
+ players = []; // ✅ исправлено
  index = 0;
 
  switchScreen("categories");
@@ -127,7 +120,6 @@ function startSpy(){
 function chooseCategory(c){
  let count = +document.getElementById("players").value;
 
- // 🔐 защищённое копирование
  _secret = JSON.parse(JSON.stringify(
     data[c][Math.floor(Math.random()*data[c].length)]
  ));
@@ -152,7 +144,6 @@ function nextPlayer(){
 function showCard(){
  let card = document.getElementById("card");
 
- // защита от багов
  if(mode === "spy" && !_secret){
   alert("Ошибка игры");
   return;
