@@ -1,214 +1,47 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="UTF-8">
-
-<!-- 🔥 ВАЖНО ДЛЯ ТЕЛЕФОНА -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-
-<title>Spy Game ULTRA</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-
-<style>
-
-body {
-    margin:0;
-    font-family:'Segoe UI', sans-serif;
-    background:#0f0f0f;
-    color:#e0e0e0;
-    touch-action: manipulation;
-}
-
-h1 {
-    text-align:center;
-    margin:15px 0;
-    font-size:22px;
-}
-
-.screen {
-    position:absolute;
-    width:100%;
-    height:100%;
-    top:0;
-    left:0;
-    display:none;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    padding:10px;
-}
-
-.screen.active {
-    display:flex;
-}
-
-.card {
-    background:#1a1a1a;
-    border-radius:20px;
-    padding:20px;
-    width:100%;
-    max-width:420px;
-    text-align:center;
-}
-
-/* =========================
-   🔥 КНОПКИ (АДАПТИВНЫЕ)
-========================= */
-
-button {
-    width:100%;
-    margin:12px 0;
-    border:none;
-    border-radius:18px;
-    cursor:pointer;
-
-    /* главное улучшение */
-    font-size:clamp(18px, 5vw, 24px);
-    padding:clamp(16px, 5vw, 26px);
-}
-
-/* =========================
-   🔥 РЕЖИМЫ (самые большие)
-========================= */
-.big-btn {
-    font-size:clamp(24px, 6.5vw, 32px);
-    padding:clamp(22px, 6vw, 36px);
-}
-
-/* =========================
-   🔥 ВЫБОР ИГРОКОВ
-========================= */
-.select-btn {
-    font-size:clamp(22px, 6vw, 30px);
-    padding:clamp(20px, 6vw, 32px);
-}
-
-/* =========================
-   🔥 КАТЕГОРИИ
-========================= */
-.cat-btn {
-    font-size:clamp(22px, 6vw, 30px);
-    padding:clamp(20px, 6vw, 32px);
-}
-
-/* =========================
-   ЦВЕТА
-========================= */
-.mode { background:#9c27b0; color:white; }
-.start { background:#2196f3; color:white; }
-.next { background:#4caf50; color:white; }
-
-/* =========================
-   ПРОЧЕЕ
-========================= */
-
-.teamBadge {
-    padding:6px 12px;
-    border-radius:10px;
-    margin-bottom:10px;
-    font-size:14px;
-}
-
-.redBadge { background:#ff5252; }
-.blueBadge { background:#42a5f5; }
-
-.overlay {
-    position:fixed;
-    top:0;left:0;
-    width:100%;height:100%;
-    background:rgba(0,0,0,0.95);
-    display:none;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-}
-
-img {
-    width:100%;
-    max-height:200px;
-    object-fit:cover;
-    border-radius:12px;
-    margin-top:10px;
-}
-
-</style>
-</head>
-
-<body>
-
-<h1>🎮 Spy Game ULTRA</h1>
-
-<!-- MENU -->
-<div id="menu" class="screen active">
-<div class="card">
-<h2>Выбери режим</h2>
-
-<button class="mode big-btn" onclick="goSpy()">🕵️ Шпион</button>
-<button class="mode big-btn" onclick="goHostage()">🔒 Заложники</button>
-
-</div>
-</div>
-
-<!-- HOSTAGE -->
-<div id="hostageSelect" class="screen">
-<div class="card">
-<h2>Количество игроков</h2>
-
-<button class="start select-btn" onclick="startHostage(8)">8 игроков</button>
-<button class="start select-btn" onclick="startHostage(10)">10 игроков</button>
-
-</div>
-</div>
-
-<!-- SPY SETUP -->
-<div id="setup" class="screen">
-<div class="card">
-<h2>Настройки</h2>
-
-<p>Игроки</p>
-<input id="players" type="number" value="5">
-
-<p>Шпионы</p>
-<input id="spies" type="number" value="1">
-
-<button class="start" onclick="startSpy()">Далее</button>
-
-</div>
-</div>
-
-<!-- CATEGORY -->
-<div id="categories" class="screen">
-<div class="card">
-<h2>Категория</h2>
-
-<button class="start cat-btn" onclick="chooseCategory('location')">📍 Локации</button>
-<button class="start cat-btn" onclick="chooseCategory('people')">👤 Люди</button>
-
-</div>
-</div>
-
-<!-- GAME -->
-<div id="game" class="screen">
-<div class="card" id="card">Нажми "Следующий игрок"</div>
-
-<button class="next" onclick="nextPlayer()">Следующий игрок</button>
-<button onclick="restart()">🔁 Заново</button>
-</div>
-
-<div class="overlay" id="overlay">
-<h2>Передай телефон</h2>
-<button onclick="showCard()">Открыть</button>
-</div>
-
 <script>
+// ================= SECURITY =================
+
 const tg = window.Telegram.WebApp;
 tg.expand();
 
+// Проверка Telegram (не даёт открыть вне Telegram)
+if (!tg.initData || tg.initData.length === 0) {
+    document.body.innerHTML = "<h2 style='text-align:center;margin-top:50px'>Открой игру через Telegram</h2>";
+    throw new Error("Not Telegram");
+}
+
+// анти DevTools (простая)
+setInterval(() => {
+    const w = window.outerWidth - window.innerWidth;
+    const h = window.outerHeight - window.innerHeight;
+    if (w > 160 || h > 160) {
+        document.body.innerHTML = "🚫 Доступ запрещён";
+    }
+}, 1000);
+
+// блок правого клика
+document.addEventListener("contextmenu", e => e.preventDefault());
+
+// блок F12 / Ctrl+Shift+I
+document.addEventListener("keydown", e => {
+    if (e.key === "F12" || (e.ctrlKey && e.shiftKey && e.key === "I")) {
+        e.preventDefault();
+    }
+});
+
+// ================= GAME (ТВОЙ КОД С ПРАВКАМИ) =================
+
 let mode = "";
-let players = [];
+let players = Object.seal([]); // защита массива
 let index = 0;
 let spiesCount = 1;
-let secret = null;
+
+// 🔐 скрытый secret
+let _secret = null;
+Object.defineProperty(window, "secret", {
+    get: () => undefined,
+    set: () => {}
+});
 
 const data = {
  location:[
@@ -257,7 +90,7 @@ function goHostage(){
 
 /* HOSTAGE */
 function startHostage(count){
- players = [];
+ players = Object.seal([]);
  index = 0;
 
  let roles8 = ["Босс","Стесняжка","Подрывник","Шпион"];
@@ -285,7 +118,7 @@ function startSpy(){
   return;
  }
 
- players = [];
+ players = Object.seal([]);
  index = 0;
 
  switchScreen("categories");
@@ -294,7 +127,10 @@ function startSpy(){
 function chooseCategory(c){
  let count = +document.getElementById("players").value;
 
- secret = data[c][Math.floor(Math.random()*data[c].length)];
+ // 🔐 защищённое копирование
+ _secret = JSON.parse(JSON.stringify(
+    data[c][Math.floor(Math.random()*data[c].length)]
+ ));
 
  for(let i=0;i<spiesCount;i++) players.push("spy");
  for(let i=spiesCount;i<count;i++) players.push("player");
@@ -316,12 +152,20 @@ function nextPlayer(){
 function showCard(){
  let card = document.getElementById("card");
 
+ // защита от багов
+ if(mode === "spy" && !_secret){
+  alert("Ошибка игры");
+  return;
+ }
+
  if(mode === "spy"){
   let role = players[index];
   if(role === "spy"){
    card.innerHTML = "<h2>🕵️ ШПИОН</h2>";
   } else {
-   card.innerHTML = `<h2>${secret.name}</h2><img src="${secret.img}">`;
+   card.innerHTML = `<h2>${_secret.name}</h2>${
+     _secret.img ? `<img src="${_secret.img}">` : ""
+   }`;
   }
  }
 
@@ -343,6 +187,3 @@ function restart(){
  location.reload();
 }
 </script>
-
-</body>
-</html>
