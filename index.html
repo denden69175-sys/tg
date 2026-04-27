@@ -1,6 +1,6 @@
 <script>
-const tg = window.Telegram.WebApp;
-tg.expand();
+const tg = window.Telegram?.WebApp;
+if (tg) tg.expand();
 
 let mode = "";
 let players = [];
@@ -119,7 +119,8 @@ function showCard(){
   if(role === "spy"){
    card.innerHTML = "<h2>🕵️ ШПИОН</h2>";
   } else {
-   card.innerHTML = `<h2>${secret.name}</h2><img src="${secret.img}">`;
+   card.innerHTML = `<h2>${secret.name}</h2>` +
+     (secret.img ? `<img src="${secret.img}">` : "");
   }
  }
 
@@ -128,7 +129,9 @@ function showCard(){
   let cls = p.team === "red" ? "redBadge" : "blueBadge";
 
   card.innerHTML = `
-    <div class="teamBadge ${cls}">${p.team === "red" ? "Красные" : "Синие"}</div>
+    <div class="teamBadge ${cls}">
+      ${p.team === "red" ? "Красные" : "Синие"}
+    </div>
     <h2>${p.role}</h2>
   `;
  }
