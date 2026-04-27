@@ -1,40 +1,14 @@
 <script>
-// ================= SECURITY (БЕЗ ЛОМАЮЩИХ ФИЧ) =================
-
 const tg = window.Telegram?.WebApp;
 if (tg) tg.expand();
-
-// ⚠️ мягкая проверка Telegram (не ломает игру)
-if (!tg || !tg.initData) {
-    console.warn("Открыто вне Telegram");
-}
-
-// ❌ УБРАЛИ анти DevTools (он ломал Telegram WebView)
-// ❌ УБРАЛИ Object.seal (он ломал push)
-
-// блок правого клика (безопасно)
-document.addEventListener("contextmenu", e => e.preventDefault());
-
-// блок F12 (мягкий)
-document.addEventListener("keydown", e => {
-    if (e.key === "F12") {
-        e.preventDefault();
-    }
-});
 
 // ================= GAME =================
 
 let mode = "";
-let players = []; // ✅ нормальный массив
+let players = [];
 let index = 0;
 let spiesCount = 1;
-
-// 🔐 скрытый secret (оставили)
-let _secret = null;
-Object.defineProperty(window, "secret", {
-    get: () => undefined,
-    set: () => {}
-});
+let secret = null;
 
 const data = {
  location:[
@@ -83,7 +57,7 @@ function goHostage(){
 
 /* HOSTAGE */
 function startHostage(count){
- players = []; // ✅ исправлено
+ players = [];
  index = 0;
 
  let roles8 = ["Босс","Стесняжка","Подрывник","Шпион"];
@@ -111,7 +85,7 @@ function startSpy(){
   return;
  }
 
- players = []; // ✅ исправлено
+ players = [];
  index = 0;
 
  switchScreen("categories");
@@ -120,9 +94,7 @@ function startSpy(){
 function chooseCategory(c){
  let count = +document.getElementById("players").value;
 
- _secret = JSON.parse(JSON.stringify(
-    data[c][Math.floor(Math.random()*data[c].length)]
- ));
+ secret = data[c][Math.floor(Math.random()*data[c].length)];
 
  for(let i=0;i<spiesCount;i++) players.push("spy");
  for(let i=spiesCount;i<count;i++) players.push("player");
@@ -144,18 +116,13 @@ function nextPlayer(){
 function showCard(){
  let card = document.getElementById("card");
 
- if(mode === "spy" && !_secret){
-  alert("Ошибка игры");
-  return;
- }
-
  if(mode === "spy"){
   let role = players[index];
   if(role === "spy"){
    card.innerHTML = "<h2>🕵️ ШПИОН</h2>";
   } else {
-   card.innerHTML = `<h2>${_secret.name}</h2>${
-     _secret.img ? `<img src="${_secret.img}">` : ""
+   card.innerHTML = `<h2>${secret.name}</h2>${
+     secret.img ? `<img src="${secret.img}">` : ""
    }`;
   }
  }
